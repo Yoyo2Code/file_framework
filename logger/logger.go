@@ -1,6 +1,7 @@
 package logger
 
 import (
+	"encoding/json"
 	"fmt"
 	"os"
 	"os/exec"
@@ -11,7 +12,7 @@ import (
 )
 
 var (
-	logfile        = "./framework.csv"
+	logfile = "./frameworklog.json"
 )
 
 // logs when a process is started
@@ -28,17 +29,17 @@ func LogProcessStart(pa system.ProgramArgs, processID int) {
 	nameAndStartFields := strings.Fields(string(nameAndStart))
 	processName, timeStamp := nameAndStartFields[0], strings.Join(nameAndStartFields[1:], " ")
 
-	// change to string
-	logOutput := fmt.Sprintf(
-		"%s,%s,%s,%s,%d",
-		timeStamp,
-		uName,
-		processName,
-		strings.Join(pa.Data, " "),
-		processID,
-	)
+	d := map[string]string{
+		"timestamp":          timeStamp,
+		"username":           uName,
+		"processName":        processName,
+		"processCommandLine": strings.Join(pa.Data, " "),
+		"processID":          fmt.Sprintf("%d",processID),
+	}
 
-	writeToLogFile(logOutput)
+	logOutput, _ := json.Marshal(d)
+
+	writeToLogFile(string(logOutput))
 }
 
 // logs when a file is modified (created, updated, deleted)
@@ -54,7 +55,7 @@ func LogFileModification(pa system.ProgramArgs, processID int) {
 	// get the current user
 	pUser, _ := user.Current()
 	uName := pUser.Username
-	
+
 	// remove new line
 	processCommandLine = processCommandLine[:len(processCommandLine)-1]
 	nameAndStartFields := strings.Fields(string(nameAndStart))
@@ -62,19 +63,19 @@ func LogFileModification(pa system.ProgramArgs, processID int) {
 	// separate the process name and timestamp
 	processName, timeStamp := nameAndStartFields[0], strings.Join(nameAndStartFields[1:], " ")
 
-	// format string
-	logOutput := fmt.Sprintf(
-		"%s,%s,%s,%s,%s,%s,%d",
-		timeStamp,
-		pa.FullFilePath,
-		pa.Action,
-		uName,
-		processName,
-		processCommandLine,
-		processID,
-	)
+	d := map[string]string{
+		"timestamp": timeStamp,
+		"fullPath": pa.FullFilePath,
+		"action": pa.Action,
+		"username": uName,
+		"processName": processName,
+		"processCommandLine": string(processCommandLine),
+		"processID": fmt.Sprintf("%d",processID),
+	}
+    // enc := json.NewEncoder(os.Stdout)
+	logOutput, _ := json.Marshal(d)
 
-	writeToLogFile(logOutput)
+	writeToLogFile(string(logOutput))
 }
 
 // logs when data is transmitted across TCP
@@ -91,21 +92,22 @@ func LogNetworkTransmit(pa system.ProgramArgs, networkData system.NetworkData, p
 	nameAndStartFields := strings.Fields(string(nameAndStart))
 	processName, timeStamp := nameAndStartFields[0], strings.Join(nameAndStartFields[1:], " ")
 
-	// format the string
-	logOutput := fmt.Sprintf(
-		"%s,%s,%s,%s,%s,%s,%s,%s,%d",
-		timeStamp,
-		uName,
-		fmt.Sprintf("%s:%s", networkData.DestinationIP, networkData.DestinationPort),
-		fmt.Sprintf("%s:%s", networkData.SourceIP, networkData.SourcePort),
-		networkData.BytesSent,
-		networkData.Protocol,
-		processName,
-		strings.Join(pa.Data, " "),
-		processID,
-	)
+	d := map[string]string{
+		"timestamp": timeStamp,
+		"username": uName,
+		"destinationAddressAndPort": fmt.Sprintf("%s:%s", networkData.DestinationIP, networkData.DestinationPort),
+		"sourceAddressAndPort": fmt.Sprintf("%s:%s", networkData.SourceIP, networkData.SourcePort),
+		"BytesSent": networkData.BytesSent,
+		"Protcol": networkData.Protocol,
+		"processName": processName,
+		"processCommandLine": strings.Join(pa.Data, " "),
+		"processID": fmt.Sprintf("%d",processID),
+	}
+    // enc := json.NewEncoder(os.Stdout)
+	logOutput, _ := json.Marshal(d)
 
-	writeToLogFile(logOutput)}
+	writeToLogFile(string(logOutput))
+}
 
 // write to the logfile defined
 // NOTE: can be modified to print csv, yaml, etc.
@@ -114,10 +116,10 @@ func writeToLogFile(entry string) {
 	if err != nil {
 		panic(err)
 	}
-	
+
 	defer f.Close()
-	
-	if _, err = f.WriteString(entry + "\n"); err != nil {
+
+	if _, err = f.WriteString(entry + "," + "\n"); err != nil {
 		panic(err)
 	}
 }
