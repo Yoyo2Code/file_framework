@@ -1,7 +1,6 @@
 package system
 
 import (
-	"fmt"
 	"os"
 	"os/exec"
 )
