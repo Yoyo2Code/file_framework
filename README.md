@@ -54,7 +54,7 @@ Before running examples the project must be built...
 
 ## Run executable (sh file creates a new file to verify it works)
 
-`./file_framework -action=execute sh`
+`./file_framework -action=execute sh test.sh`
 
 ## Create file
 

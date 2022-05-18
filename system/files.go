@@ -1,6 +1,7 @@
 package system
 
 import (
+	"fmt"
 	"os"
 	"os/exec"
 )
@@ -21,8 +22,13 @@ func CreateFile(args ProgramArgs) int {
 // execute and return the PID
 func ExecuteFile(args ProgramArgs) int {
 	// execute the command in spawned process
-	cmd := exec.Command(args.Data[0],args.Data...)
+	cmd := exec.Command(args.Data[0], args.Data[1:]...)
 	err := cmd.Start()
+
+	// function(data...)
+	// function(5,6,7,8,9)
+	
+	// function() { data = [5,6,7,8,9]    }
 
 	if err != nil {
 		panic(err)
