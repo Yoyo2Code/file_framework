@@ -2,14 +2,9 @@ package main
 
 import (
 	"fmt"
-	"time"
 
 	"github.com/Yoyo2Code/file_framework/logger"
 	"github.com/Yoyo2Code/file_framework/system"
-)
-
-var (
-	startTime = time.Now()
 )
 
 func main() {

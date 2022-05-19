@@ -1,7 +1,6 @@
 package system
 
 import (
-	"fmt"
 	"net"
 	"os"
 	"strings"
@@ -19,30 +18,51 @@ type NetworkData struct {
 // ex. localhost:8080, "hello world"
 func SendMessage(address string, msg string) (data NetworkData, pid int) {
 	// establish network connection
- 	conn, err := net.Dial("udp", address)
-	if err != nil {
-			panic(err)
-	}
+    servAddr := "localhost:6666"
+    tcpAddr, err := net.ResolveTCPAddr("tcp", servAddr)
+    if err != nil {
+        println("ResolveTCPAddr failed:", err.Error())
+        os.Exit(1)
+    }
 
-	// get separated destination port and address
-	destinationAddr, destinationPort := GetIpAndAddr(address)
+    conn, err := net.DialTCP("tcp", nil, tcpAddr)
+    if err != nil {
+        println("Dial failed:", err.Error())
+        os.Exit(1)
+    }
 
-	defer conn.Close()	// closes connection
+    _, err = conn.Write([]byte(msg))
+    if err != nil {
+        println("Write to server failed:", err.Error())
+        os.Exit(1)
+    }
 
-	// send message
-	byteCount, _ := fmt.Fprint(conn, msg)
+	println("pid ->", os.Getpid())
+    println("write to server = ", msg)
+
+    // reply := make([]byte, 1024)
+
+    // _, err = conn.Read(reply)
+    // if err != nil {
+    //     println("Write to server failed:", err.Error())
+    //     os.Exit(1)
+    // }
+
+    // println("reply from server=", string(reply))
+
+    conn.Close()
 
 	// grab my IP address and port sent from
-	myIP := GetMyIP()
+	// myIP := GetMyIP()
 
 	// return network info from process, id of process
 	return NetworkData{
-		DestinationIP: destinationAddr,
-		DestinationPort: destinationPort,
-		SourceIP: fmt.Sprintf("%s", myIP.IP.To4()),	// errors in linter but requires instead of string()
-		SourcePort: fmt.Sprintf("%d", myIP.Port),
-		BytesSent: fmt.Sprintf("%d", byteCount),
-		Protocol: "UDP",
+		// DestinationIP: destinationAddr,
+		// DestinationPort: destinationPort,
+		// SourceIP: fmt.Sprintf("%s", myIP.IP.To4()),	// errors in linter but requires instead of string()
+		// SourcePort: fmt.Sprintf("%d", myIP.Port),
+		// BytesSent: fmt.Sprintf("%d", byteCount),
+		// Protocol: "UDP",
 	},os.Getpid()
 }
 
